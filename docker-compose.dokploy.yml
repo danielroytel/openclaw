@@ -79,19 +79,41 @@ services:
       - -c
       - |
         # Start the Tailscale daemon in background
-        /usr/local/bin/tailscaled --tun=userspace-networking --socks5=localhost:1055 &
+        tailscaled --tun=userspace-networking --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock > /tmp/tailscaled.log 2>&1 &
+        TAILSCALED_PID=$!
 
-        # Wait for daemon to be ready
-        sleep 5
+        # Wait for daemon socket to be ready
+        echo "Waiting for tailscaled to start..."
+        for i in $(seq 1 30); do
+          if [ -S /var/run/tailscale/tailscaled.sock ]; then
+            echo "tailscaled is ready!"
+            break
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 1
+        done
+
+        # Check if daemon is running
+        if ! kill -0 $TAILSCALED_PID 2>/dev/null; then
+          echo "ERROR: tailscaled failed to start"
+          cat /tmp/tailscaled.log
+          exit 1
+        fi
 
         # Authenticate with Tailscale
+        echo "Authenticating with Tailscale..."
         tailscale up --authkey="$TS_AUTHKEY" --hostname="$TS_HOSTNAME"
 
         # Enable Funnel on port 18789 (provides HTTPS with valid cert)
+        echo "Enabling Funnel..."
         tailscale funnel --bg --https=18789 localhost:18789
 
-        # Keep container alive
-        wait
+        # Show status
+        tailscale status
+
+        # Keep container alive by monitoring the daemon
+        echo "Tailscale is running. Keeping container alive..."
+        wait $TAILSCALED_PID
 
 volumes:
   moltbot-config:
