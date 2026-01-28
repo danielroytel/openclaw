@@ -51,7 +51,8 @@ services:
         "--bind",
         "${CLAWDBOT_GATEWAY_BIND:-local}",
         "--port",
-        "18789"
+        "18789",
+        "--allow-unconfigured"
       ]
 
 volumes:
