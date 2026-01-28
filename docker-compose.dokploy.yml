@@ -51,6 +51,15 @@ services:
         # Fix volume permissions on startup
         mkdir -p /home/node/.clawdbot/cron /home/node/clawd/canvas /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
         chown -R node:node /home/node/.clawdbot /home/node/clawd
+
+        # Fix npm global directory permissions
+        mkdir -p /usr/local/lib/node_modules /usr/local/bin
+        chown -R node:node /usr/local/lib/node_modules /usr/local/bin
+
+        # Fix Homebrew cache permissions
+        mkdir -p /home/linuxbrew/.linuxbrew /home/node/.cache
+        chown -R node:node /home/linuxbrew/.linuxbrew /home/node/.cache
+
         # Drop to node user and start gateway (app is in /app)
         exec su node -c "exec node /app/dist/index.js gateway --bind '${CLAWDBOT_GATEWAY_BIND:-lan}' --port 18789 --allow-unconfigured"
 
