@@ -38,7 +38,7 @@ services:
       - traefik.http.services.moltbot.loadbalancer.server.port=18789
 
     healthcheck:
-      test: ["CMD", "sh", "-c", "su-exec node node dist/index.js health --token \"$CLAWDBOT_GATEWAY_TOKEN\""]
+      test: ["CMD", "sh", "-c", "su node -c 'node dist/index.js health --token \"$CLAWDBOT_GATEWAY_TOKEN\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -52,7 +52,7 @@ services:
         mkdir -p /home/node/.clawdbot/cron /home/node/clawd/canvas /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
         chown -R node:node /home/node/.clawdbot /home/node/clawd
         # Drop to node user and start gateway
-        exec su-exec node node dist/index.js gateway --bind "${CLAWDBOT_GATEWAY_BIND:-lan}" --port 18789 --allow-unconfigured
+        exec su node -c "cd /home/node && exec node dist/index.js gateway --bind '${CLAWDBOT_GATEWAY_BIND:-lan}' --port 18789 --allow-unconfigured"
 
 volumes:
   moltbot-config:
