@@ -85,6 +85,21 @@ services:
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
         fi
 
+        # Create moltbot CLI wrapper for easy command execution
+        cat > /usr/local/bin/moltbot << 'EOF'
+        #!/bin/sh
+        # Moltbot CLI wrapper - simplifies running commands as the node user
+        # Usage: moltbot <command> [args...]
+
+        if [ "$(id -u)" != "node" ]; then
+          exec su node -c "node /app/dist/index.js $*"
+        else
+          exec node /app/dist/index.js "$@"
+        fi
+        EOF
+        chmod +x /usr/local/bin/moltbot
+        chown node:node /usr/local/bin/moltbot
+
         # Drop to node user and start gateway (app is in /app)
         exec su node -c "exec node /app/dist/index.js gateway --bind '${CLAWDBOT_GATEWAY_BIND:-lan}' --port 18789 --allow-unconfigured"
 
