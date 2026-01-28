@@ -63,15 +63,29 @@ services:
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
         fi
 
-        # NOW fix ALL permissions (after Homebrew has created all its directories)
+        # AGGRESSIVELY fix ALL permissions (after Homebrew has created all its directories)
+        # Fix core directories
         chown -R node:node /home/node/.clawdbot /home/node/clawd
         chown -R node:node /home/node/.config/git
         chown -R node:node /usr/local/lib/node_modules /usr/local/bin /usr/local/share /usr/local/lib
-        chown -R node:node /home/node/.npm /home/node/.cache /home/node/.cache/Homebrew
-        chown -R node:node /home/linuxbrew/.linuxbrew
+        chown -R node:node /home/node/.npm /home/node/.cache
+
+        # Fix ALL Homebrew directories (include all paths Homebrew might create)
+        chown -R node:node /home/linuxbrew/.linuxbrew /home/node/.cache/Homebrew
+
+        # Explicitly fix problematic Homebrew subdirectories that get created as root
+        chown -R node:node /home/linuxbrew/.linuxbrew/Homebrew 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/etc 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/opt 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/sbin 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/var 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/include 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/share/doc 2>/dev/null || true
+        chown -R node:node /home/linuxbrew/.linuxbrew/share/man 2>/dev/null || true
 
         # Fix write permissions for ALL Homebrew directories
         chmod -R u+w /home/linuxbrew/.linuxbrew
+        chmod -R u+w /home/node/.cache/Homebrew 2>/dev/null || true
 
         # Fix npm cache write permissions
         chmod -R u+w /home/node/.npm
