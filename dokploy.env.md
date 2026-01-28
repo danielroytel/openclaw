@@ -48,8 +48,8 @@ CLAWDBOT_STATE_DIR=/home/node/.clawdbot
 # Gateway mode: "local" or "remote"
 MOLTBOT_GATEWAY__MODE=local
 
-# Gateway bind address: "local", "lan", or "0.0.0.0"
-CLAWDBOT_GATEWAY_BIND=local
+# Gateway bind address: "loopback", "lan", "tailnet", "auto", or "custom"
+CLAWDBOT_GATEWAY_BIND=loopback
 
 # Gateway port (default: 18789)
 CLAWDBOT_GATEWAY_PORT=18789

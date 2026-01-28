@@ -15,7 +15,7 @@ services:
       MOLTBOT_STATE_DIR: /home/node/.clawdbot
       CLAWDBOT_STATE_DIR: /home/node/.clawdbot
       MOLTBOT_GATEWAY__MODE: ${MOLTBOT_GATEWAY__MODE:-local}
-      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-local}
+      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
       PORT: ${PORT:-8080}
       NODE_ENV: ${NODE_ENV:-production}
 
