@@ -56,6 +56,12 @@ services:
         mkdir -p /usr/local/lib/node_modules /usr/local/bin
         chown -R node:node /usr/local/lib/node_modules /usr/local/bin
 
+        # Install Homebrew if not already installed
+        if ! command -v brew >/dev/null 2>&1; then
+          echo "Installing Homebrew..."
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
+        fi
+
         # Fix Homebrew cache permissions
         mkdir -p /home/linuxbrew/.linuxbrew /home/node/.cache
         chown -R node:node /home/linuxbrew/.linuxbrew /home/node/.cache
