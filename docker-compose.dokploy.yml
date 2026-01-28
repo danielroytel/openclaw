@@ -98,7 +98,11 @@ services:
 
         # Authenticate with Tailscale
         echo "Authenticating with Tailscale..."
-        tailscale up --authkey="$TS_AUTHKEY" --hostname="$TS_HOSTNAME"
+        tailscale up --authkey="$TS_AUTHKEY"
+
+        # Set the machine hostname (this changes the DNS name used for Funnel)
+        echo "Setting hostname to $TS_HOSTNAME..."
+        tailscale set --hostname="$TS_HOSTNAME"
 
         # Enable Funnel on port 18789 (provides HTTPS with valid cert)
         echo "Enabling Funnel..."
