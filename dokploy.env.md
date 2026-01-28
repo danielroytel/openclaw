@@ -24,6 +24,25 @@ SETUP_PASSWORD=
 CLAWDBOT_GATEWAY_TOKEN=
 ```
 
+## Tailscale Configuration (Optional - Secure Remote Access)
+
+Using Tailscale provides secure HTTPS access to the Control UI without needing Traefik.
+
+```bash
+# Get your auth key from: https://login.tailscale.com/admin/settings/keys
+# Click "Generate auth key" and use "Reusable" for containers
+TS_AUTHKEY=tskey-auth-xxxxx
+
+# Optional: Set a custom hostname for your Tailscale device
+TAILSCALE_HOSTNAME=moltbot
+```
+
+After starting, access via:
+- **HTTP**: `http://moltbot-tailnet-name.ts.net:18789/setup`
+- **Or find the Tailscale IP**: `docker exec moltbot-tailscale tailscale ip -4`
+
+Then use: `http://<tailscale-ip>:18789/setup`
+
 ## State Directory (Internal Container Paths)
 
 **IMPORTANT**: Do NOT set `CLAWDBOT_CONFIG_DIR` or `CLAWDBOT_WORKSPACE_DIR` as environment variables in Dokploy.
