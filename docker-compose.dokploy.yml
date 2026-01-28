@@ -78,14 +78,20 @@ services:
       - sh
       - -c
       - |
-        # Start Tailscale with hostname
+        # Start the Tailscale daemon in background
+        /usr/local/bin/tailscaled --tun=userspace-networking --socks5=localhost:1055 &
+
+        # Wait for daemon to be ready
+        sleep 5
+
+        # Authenticate with Tailscale
         tailscale up --authkey="$TS_AUTHKEY" --hostname="$TS_HOSTNAME"
 
         # Enable Funnel on port 18789 (provides HTTPS with valid cert)
         tailscale funnel --bg --https=18789 localhost:18789
 
         # Keep container alive
-        tail -f /dev/null
+        wait
 
 volumes:
   moltbot-config:
