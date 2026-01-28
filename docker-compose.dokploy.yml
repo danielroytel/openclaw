@@ -48,23 +48,29 @@ services:
       - sh
       - -c
       - |
-        # Fix volume permissions on startup
+        # Fix ALL permissions upfront as root
         mkdir -p /home/node/.clawdbot/cron /home/node/clawd/canvas /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
-        chown -R node:node /home/node/.clawdbot /home/node/clawd
+        mkdir -p /usr/local/lib/node_modules /usr/local/bin /usr/local/share
+        mkdir -p /home/linuxbrew/.linuxbrew /home/node/.cache /home/node/.cache/Homebrew
 
-        # Fix npm global directory permissions
-        mkdir -p /usr/local/lib/node_modules /usr/local/bin
-        chown -R node:node /usr/local/lib/node_modules /usr/local/bin
+        # Fix ownership for all critical directories
+        chown -R node:node /home/node/.clawdbot /home/node/clawd
+        chown -R node:node /usr/local/lib/node_modules /usr/local/bin /usr/local/share
+        chown -R node:node /home/linuxbrew/.linuxbrew /home/node/.cache /home/node/.cache/Homebrew
+
+        # Fix Homebrew specifically (as suggested by doctor)
+        mkdir -p /home/linuxbrew/.linuxbrew/Cellar /home/linuxbrew/.linuxbrew/Homebrew /home/linuxbrew/.linuxbrew/bin /home/linuxbrew/.linuxbrew/etc /home/linuxbrew/.linuxbrew/etc/bash_completion.d /home/linuxbrew/.linuxbrew/include /home/linuxbrew/.linuxbrew/lib /home/linuxbrew/.linuxbrew/lib/pkgconfig /home/linuxbrew/.linuxbrew/opt /home/linuxbrew/.linuxbrew/sbin /home/linuxbrew/.linuxbrew/share /home/linuxbrew/.linuxbrew/share/doc /home/linuxbrew/.linuxbrew/share/info /home/linuxbrew/.linuxbrew/share/man /home/linuxbrew/.linuxbrew/share/man/man1 /home/linuxbrew/.linuxbrew/share/man/man3 /home/linuxbrew/.linuxbrew/share/man/man7 /home/linuxbrew/.linuxbrew/share/zsh /home/linuxbrew/.linuxbrew/share/zsh/site-functions /home/linuxbrew/.linuxbrew/var/homebrew/linked /home/linuxbrew/.linuxbrew/var/homebrew/locks
+        chown -R node:node /home/linuxbrew/.linuxbrew
+
+        # Fix npm cache
+        mkdir -p /home/node/.npm
+        chown -R node:node /home/node/.npm
 
         # Install Homebrew if not already installed
         if ! command -v brew >/dev/null 2>&1; then
           echo "Installing Homebrew..."
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
         fi
-
-        # Fix Homebrew cache permissions
-        mkdir -p /home/linuxbrew/.linuxbrew /home/node/.cache
-        chown -R node:node /home/linuxbrew/.linuxbrew /home/node/.cache
 
         # Drop to node user and start gateway (app is in /app)
         exec su node -c "exec node /app/dist/index.js gateway --bind '${CLAWDBOT_GATEWAY_BIND:-lan}' --port 18789 --allow-unconfigured"
