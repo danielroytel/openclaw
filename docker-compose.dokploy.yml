@@ -57,12 +57,6 @@ services:
         mkdir -p /home/node/.npm /home/node/.cache /home/node/.cache/Homebrew
         mkdir -p /home/node/.config/git /home/linuxbrew/.linuxbrew
 
-        # Install Homebrew if not already installed
-        if ! command -v brew >/dev/null 2>&1; then
-          echo "Installing Homebrew..."
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
-        fi
-
         # BLANKET: Own EVERYTHING as node, open all permissions
         chown -R node:node /home/node /home/linuxbrew /usr/local /usr/local/lib/node_modules /usr/local/bin /usr/local/share /usr/local/lib
         chmod -R u+w /home/node /home/linuxbrew /usr/local /usr/local/lib/node_modules /usr/local/bin /usr/local/share /usr/local/lib
