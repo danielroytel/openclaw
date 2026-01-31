@@ -9,14 +9,18 @@ services:
       HOME: /home/node
       TERM: xterm-256color
       SETUP_PASSWORD: ${SETUP_PASSWORD}
-      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN} # Legacy fallback
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
-      MOLTBOT_STATE_DIR: /home/node/.clawdbot
-      CLAWDBOT_STATE_DIR: /home/node/.clawdbot
-      MOLTBOT_GATEWAY__MODE: ${MOLTBOT_GATEWAY__MODE:-local}
-      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      CLAWDBOT_STATE_DIR: /home/node/.clawdbot # Legacy fallback
+      MOLTBOT_STATE_DIR: /home/node/.clawdbot # Legacy fallback
+      OPENCLAW_GATEWAY__MODE: ${OPENCLAW_GATEWAY__MODE:-local}
+      MOLTBOT_GATEWAY__MODE: ${MOLTBOT_GATEWAY__MODE:-local} # Legacy fallback
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
+      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan} # Legacy fallback
       PORT: ${PORT:-8080}
       NODE_ENV: ${NODE_ENV:-production}
 
@@ -38,7 +42,7 @@ services:
       - traefik.http.services.moltbot.loadbalancer.server.port=18789
 
     healthcheck:
-      test: ["CMD", "sh", "-c", "su node -c 'node /app/dist/entry.js health --token \"$CLAWDBOT_GATEWAY_TOKEN\"'"]
+      test: ["CMD", "sh", "-c", "su node -c 'node /app/dist/entry.js health --token \"$OPENCLAW_GATEWAY_TOKEN\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -51,8 +55,9 @@ services:
         # Install prerequisites
         apt-get update -qq && apt-get install -y curl git
 
-        # Create base directories
+        # Create base directories (support both legacy and new paths)
         mkdir -p /home/node/.clawdbot/cron /home/node/clawd/canvas /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
+        mkdir -p /home/node/.openclaw /home/node/openclaw 2>/dev/null || true
         mkdir -p /usr/local/lib/node_modules /usr/local/bin /usr/local/share /usr/local/lib
         mkdir -p /home/node/.npm /home/node/.cache /home/node/.cache/Homebrew
         mkdir -p /home/node/.config/git /home/linuxbrew/.linuxbrew
@@ -77,7 +82,7 @@ services:
         chown node:node /usr/local/bin/openclaw
 
         # Drop to node user and start gateway (app is in /app)
-        exec su node -c "exec node /app/dist/entry.js gateway --bind '${CLAWDBOT_GATEWAY_BIND:-lan}' --port 18789 --allow-unconfigured"
+        exec su node -c "exec node /app/dist/entry.js gateway --bind '${OPENCLAW_GATEWAY_BIND:-${CLAWDBOT_GATEWAY_BIND:-lan}}' --port 18789 --allow-unconfigured"
 
   tailscale:
     image: tailscale/tailscale:latest

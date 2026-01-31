@@ -1,16 +1,15 @@
-# Moltbot Dokploy Environment Variables
+# Openclaw Dokploy Environment Variables
 
 Copy these variables into your Dokploy service configuration.
 
 ## ⚠️ Important: Do NOT Set These Variables
 
-The following variables from `docker-compose.yml` are **NOT** for Dokploy - they are volume mount sources only:
+The following variables are **NOT** for Dokploy - they are volume mount sources only:
 
-- ❌ `CLAWDBOT_CONFIG_DIR` - **Do not set** (causes volume mount errors)
-- ❌ `CLAWDBOT_WORKSPACE_DIR` - **Do not set** (causes volume mount errors)
-- ❌ `CLAWDBOT_IMAGE` - Not needed in Dokploy
-- ❌ `CLAWDBOT_GATEWAY_PORT` - Use Dokploy's port settings instead
-- ❌ `CLAWDBOT_BRIDGE_PORT` - Use Dokploy's port settings instead
+- ❌ `OPENCLAW_CONFIG_DIR` - **Do not set** (causes volume mount errors)
+- ❌ `OPENCLAW_WORKSPACE_DIR` - **Do not set** (causes volume mount errors)
+- ❌ `CLAWDBOT_CONFIG_DIR` - Legacy name, do not set
+- ❌ `CLAWDBOT_WORKSPACE_DIR` - Legacy name, do not set
 
 Configure volumes through Dokploy's UI, not environment variables.
 
@@ -21,7 +20,7 @@ Configure volumes through Dokploy's UI, not environment variables.
 SETUP_PASSWORD=
 
 # Gateway authentication token (generate with: openssl rand -hex 32)
-CLAWDBOT_GATEWAY_TOKEN=
+OPENCLAW_GATEWAY_TOKEN=
 ```
 
 ## Tailscale Configuration (Optional - Secure HTTPS Access)
@@ -51,33 +50,32 @@ docker exec moltbot-tailscale tailscale funnel status
 
 ## State Directory (Internal Container Paths)
 
-**IMPORTANT**: Do NOT set `CLAWDBOT_CONFIG_DIR` or `CLAWDBOT_WORKSPACE_DIR` as environment variables in Dokploy.
+**IMPORTANT**: Do NOT set `OPENCLAW_CONFIG_DIR` or `OPENCLAW_WORKSPACE_DIR` as environment variables in Dokploy.
 
 These are docker-compose volume mount sources, not container env vars. Dokploy handles volumes through its UI, not env vars.
 
 Inside the container, paths are always:
-- Config: `/home/node/.clawdbot`
-- Workspace: `/home/node/clawd`
+- Config: `/home/node/.openclaw` (legacy: `/home/node/.clawdbot`)
+- Workspace: `/home/node/openclaw` (legacy: `/home/node/clawd`)
 
-Only set the state directory override (for rebrand compatibility):
-
+State directory override (for custom paths):
 ```bash
 # State directory override (internal path, not volume mount)
-MOLTBOT_STATE_DIR=/home/node/.clawdbot
+OPENCLAW_STATE_DIR=/home/node/.openclaw
+
+# Legacy fallback (still supported)
 CLAWDBOT_STATE_DIR=/home/node/.clawdbot
+MOLTBOT_STATE_DIR=/home/node/.clawdbot
 ```
 
 ## Gateway Configuration
 
 ```bash
 # Gateway mode: "local" or "remote"
-MOLTBOT_GATEWAY__MODE=local
+OPENCLAW_GATEWAY__MODE=local
 
 # Gateway bind address: "loopback", "lan", "tailnet", "auto", or "custom"
-CLAWDBOT_GATEWAY_BIND=lan
-
-# Gateway port (default: 18789)
-CLAWDBOT_GATEWAY_PORT=18789
+OPENCLAW_GATEWAY_BIND=lan
 ```
 
 ## Optional: Claude AI Provider
@@ -99,6 +97,17 @@ NODE_ENV=production
 PORT=8080
 ```
 
+## Legacy Environment Variables (Still Supported)
+
+For backward compatibility, legacy variable names are still supported:
+
+| Legacy Name | New Name |
+|------------|----------|
+| `CLAWDBOT_GATEWAY_TOKEN` | `OPENCLAW_GATEWAY_TOKEN` |
+| `CLAWDBOT_GATEWAY_BIND` | `OPENCLAW_GATEWAY_BIND` |
+| `MOLTBOT_GATEWAY__MODE` | `OPENCLAW_GATEWAY__MODE` |
+| `CLAWDBOT_STATE_DIR` | `OPENCLAW_STATE_DIR` |
+
 ---
 
 ## Volume Mounts
@@ -107,8 +116,8 @@ Configure these persistent volume mounts in Dokploy:
 
 | Container Path | Description |
 |----------------|-------------|
-| `/home/node/.clawdbot` | Config directory |
-| `/home/node/clawd` | Workspace directory |
+| `/home/node/.openclaw` | Config directory (legacy: `/home/node/.clawdbot`) |
+| `/home/node/openclaw` | Workspace directory (legacy: `/home/node/clawd`) |
 
 ## Ports to Expose
 
@@ -120,7 +129,7 @@ Configure these persistent volume mounts in Dokploy:
 ## Health Check
 
 ```
-node dist/entry.js health --token "$CLAWDBOT_GATEWAY_TOKEN"
+node dist/entry.js health --token "$OPENCLAW_GATEWAY_TOKEN"
 ```
 
 ## After First Deploy
@@ -134,7 +143,7 @@ node dist/entry.js health --token "$CLAWDBOT_GATEWAY_TOKEN"
 
 ## Traefik Labels (Dokploy)
 
-Add these labels to your Moltbot service in Dokploy for Traefik reverse proxy:
+Add these labels to your Openclaw service in Dokploy for Traefik reverse proxy:
 
 ### Basic HTTP Routing
 
@@ -143,55 +152,44 @@ Add these labels to your Moltbot service in Dokploy for Traefik reverse proxy:
 traefik.enable=true
 
 # HTTP router (main gateway)
-traefik.http.routers.moltbot.rule=Host(`moltbot.your-domain.com`)
-traefik.http.routers.moltbot.entrypoints=websecure
-traefik.http.routers.moltbot.tls=true
-traefik.http.routers.moltbot.tls.certresolver=letsencrypt
+traefik.http.routers.openclaw.rule=Host(`openclaw.your-domain.com`)
+traefik.http.routers.openclaw.entrypoints=websecure
+traefik.http.routers.openclaw.tls=true
+traefik.http.routers.openclaw.tls.certresolver=letsencrypt
 
 # Service configuration
-traefik.http.services.moltbot.loadbalancer.server.port=18789
+traefik.http.services.openclaw.loadbalancer.server.port=18789
 
 # WebSocket support (required for Gateway)
-traefik.http.routers.moltbot.service=moltbot
+traefik.http.routers.openclaw.service=openclaw
 ```
 
 ### With HTTPS Redirect (HTTP → HTTPS)
 
 ```yaml
 # HTTP router (redirects to HTTPS)
-traefik.http.routers.moltbot-http.rule=Host(`moltbot.your-domain.com`)
-traefik.http.routers.moltbot-http.entrypoints=web
-traefik.http.routers.moltbot-http.middlewares=redirect-to-https
+traefik.http.routers.openclaw-http.rule=Host(`openclaw.your-domain.com`)
+traefik.http.routers.openclaw-http.entrypoints=web
+traefik.http.routers.openclaw-http.middlewares=redirect-to-https
 
 # HTTPS redirect middleware
 traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
 traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
 ```
 
-### Setup Wizard Subdomain (Optional)
-
-```yaml
-# Separate router for setup wizard
-traefik.http.routers.moltbot-setup.rule=Host(`setup.your-domain.com`)
-traefik.http.routers.moltbot-setup.entrypoints=websecure
-traefik.http.routers.moltbot-setup.tls=true
-traefik.http.routers.moltbot-setup.tls.certresolver=letsencrypt
-traefik.http.routers.moltbot-setup.service=moltbot
-```
-
 ### Full Example (All Labels Combined)
 
 ```yaml
 traefik.enable=true
-traefik.http.routers.moltbot.rule=Host(`moltbot.your-domain.com`)
-traefik.http.routers.moltbot.entrypoints=websecure
-traefik.http.routers.moltbot.tls=true
-traefik.http.routers.moltbot.tls.certresolver=letsencrypt
-traefik.http.routers.moltbot.service=moltbot
-traefik.http.services.moltbot.loadbalancer.server.port=18789
-traefik.http.routers.moltbot-http.rule=Host(`moltbot.your-domain.com`)
-traefik.http.routers.moltbot-http.entrypoints=web
-traefik.http.routers.moltbot-http.middlewares=redirect-to-https
+traefik.http.routers.openclaw.rule=Host(`openclaw.your-domain.com`)
+traefik.http.routers.openclaw.entrypoints=websecure
+traefik.http.routers.openclaw.tls=true
+traefik.http.routers.openclaw.tls.certresolver=letsencrypt
+traefik.http.routers.openclaw.service=openclaw
+traefik.http.services.openclaw.loadbalancer.server.port=18789
+traefik.http.routers.openclaw-http.rule=Host(`openclaw.your-domain.com`)
+traefik.http.routers.openclaw-http.entrypoints=web
+traefik.http.routers.openclaw-http.middlewares=redirect-to-https
 traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
 traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
 ```
@@ -202,36 +200,34 @@ traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
 
 ```yaml
 services:
-  moltbot:
+  openclaw:
     image: ghcr.io/moltbot/moltbot:main
-    container_name: moltbot
+    container_name: openclaw
     restart: unless-stopped
 
     environment:
       - SETUP_PASSWORD=${SETUP_PASSWORD}
-      - CLAWDBOT_GATEWAY_TOKEN=${CLAWDBOT_GATEWAY_TOKEN}
-      - MOLTBOT_STATE_DIR=/home/node/.clawdbot
-      - CLAWDBOT_STATE_DIR=/home/node/.clawdbot
-      - MOLTBOT_GATEWAY__MODE=local
-      - CLAWDBOT_GATEWAY_BIND=local
-      - CLAWDBOT_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENCLAW_STATE_DIR=/home/node/.openclaw
+      - OPENCLAW_GATEWAY__MODE=local
+      - OPENCLAW_GATEWAY_BIND=lan
 
     volumes:
-      - moltbot-config:/home/node/.clawdbot
-      - moltbot-workspace:/home/node/clawd
+      - openclaw-config:/home/node/.openclaw
+      - openclaw-workspace:/home/node/openclaw
 
     labels:
       - traefik.enable=true
-      - traefik.http.routers.moltbot.rule=Host(`moltbot.your-domain.com`)
-      - traefik.http.routers.moltbot.entrypoints=websecure
-      - traefik.http.routers.moltbot.tls=true
-      - traefik.http.routers.moltbot.tls.certresolver=letsencrypt
-      - traefik.http.routers.moltbot.service=moltbot
-      - traefik.http.services.moltbot.loadbalancer.server.port=18789
+      - traefik.http.routers.openclaw.rule=Host(`openclaw.your-domain.com`)
+      - traefik.http.routers.openclaw.entrypoints=websecure
+      - traefik.http.routers.openclaw.tls=true
+      - traefik.http.routers.openclaw.tls.certresolver=letsencrypt
+      - traefik.http.routers.openclaw.service=openclaw
+      - traefik.http.services.openclaw.loadbalancer.server.port=18789
 
 volumes:
-  moltbot-config:
-  moltbot-workspace:
+  openclaw-config:
+  openclaw-workspace:
 ```
 
 ### Notes:
@@ -239,3 +235,4 @@ volumes:
 - Ensure `letsencrypt` cert resolver is configured in your Traefik instance
 - The Gateway uses WebSocket connections - Traefik handles this automatically
 - Port `18789` is the internal container port, not the exposed host port
+- Both new (`OPENCLAW_*`) and legacy (`CLAWDBOT_*`, `MOLTBOT_*`) environment variables are supported
