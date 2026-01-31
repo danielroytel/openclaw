@@ -85,73 +85,10 @@ services:
         # Drop to node user and start gateway (app is in /app)
         exec su node -c "exec node /app/dist/entry.js gateway --bind '${OPENCLAW_GATEWAY_BIND:-${CLAWDBOT_GATEWAY_BIND:-lan}}' --port 18789 --allow-unconfigured"
 
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: moltbot-tailscale
-    restart: unless-stopped
-    privileged: true
-    network_mode: service:moltbot-gateway
-
-    environment:
-      TS_AUTHKEY: ${TS_AUTHKEY}
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_HOSTNAME: ${TAILSCALE_HOSTNAME:-moltbot}
-      TS_USERSPACE: false
-
-    volumes:
-      - moltbot-tailscale:/var/lib/tailscale
-
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-
-    command:
-      - sh
-      - -c
-      - |
-        # Start the Tailscale daemon in background
-        tailscaled --tun=userspace-networking --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock > /tmp/tailscaled.log 2>&1 &
-        TAILSCALED_PID=$!
-
-        # Wait for daemon socket to be ready
-        echo "Waiting for tailscaled to start..."
-        for i in $(seq 1 30); do
-          if [ -S /var/run/tailscale/tailscaled.sock ]; then
-            echo "tailscaled is ready!"
-            break
-          fi
-          echo "Waiting... ($i/30)"
-          sleep 1
-        done
-
-        # Give daemon a moment to fully initialize
-        sleep 2
-
-        # Only authenticate if not already connected (prevents creating new machines on restart)
-        if ! tailscale status >/dev/null 2>&1; then
-          echo "Authenticating with Tailscale..."
-          tailscale up --authkey="$TS_AUTHKEY" --hostname="$TS_HOSTNAME" --reset=false
-        else
-          echo "Already authenticated, skipping..."
-        fi
-
-        # Enable Funnel on port 18789 (provides HTTPS with valid cert)
-        echo "Enabling Funnel..."
-        tailscale funnel --bg --https=18789 localhost:18789
-
-        # Show status
-        tailscale status
-
-        # Keep container alive by monitoring the daemon
-        echo "Tailscale is running. Keeping container alive..."
-        wait $TAILSCALED_PID
-
 volumes:
   moltbot-config:
     driver: local
   moltbot-workspace:
-    driver: local
-  moltbot-tailscale:
     driver: local
 
 networks:

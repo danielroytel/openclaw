@@ -23,30 +23,14 @@ SETUP_PASSWORD=
 OPENCLAW_GATEWAY_TOKEN=
 ```
 
-## Tailscale Configuration (Optional - Secure HTTPS Access)
-
-Using Tailscale Funnel provides a **public HTTPS URL with a valid certificate** - perfect for the Control UI's secure context requirement.
+## Optional: Ollama Provider (Local LLMs)
 
 ```bash
-# Get your auth key from: https://login.tailscale.com/admin/settings/keys
-# Click "Generate auth key" and use "Reusable" for containers
-TS_AUTHKEY=tskey-auth-xxxxx
-
-# Optional: Set a custom hostname for your Tailscale device
-TAILSCALE_HOSTNAME=moltbot
+# Enable Ollama for local LLMs (any value works; Ollama doesn't require a real key)
+OLLAMA_API_KEY=ollama-local
 ```
 
-After starting, access via **HTTPS**:
-```
-https://moltbot.ts.net:18789/setup
-```
-
-Or find your Funnel URL:
-```bash
-docker exec moltbot-tailscale tailscale funnel status
-```
-
-**Note**: Tailscale Funnel requires the Funnel feature to be enabled on your tailnet (https://login.tailscale.com/admin/funnel)
+> **Note**: For Ollama on a different host, you'll need to configure the custom URL via the app's **Configuration → Models** page. See https://docs.openclaw.ai/providers/ollama
 
 ## State Directory (Internal Container Paths)
 
@@ -211,6 +195,7 @@ services:
       - OPENCLAW_STATE_DIR=/home/node/.openclaw
       - OPENCLAW_GATEWAY__MODE=local
       - OPENCLAW_GATEWAY_BIND=lan
+      - OLLAMA_API_KEY=ollama-local
 
     volumes:
       - openclaw-config:/home/node/.openclaw
