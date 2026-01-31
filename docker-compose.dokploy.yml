@@ -8,6 +8,7 @@ services:
     environment:
       HOME: /home/node
       TERM: xterm-256color
+      PATH: /home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       SETUP_PASSWORD: ${SETUP_PASSWORD}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN} # Legacy fallback
@@ -70,10 +71,17 @@ services:
         # Install Homebrew if not already installed
         if ! command -v brew >/dev/null 2>&1; then
           echo "Installing Homebrew..."
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null
+          curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | /bin/bash
+          # Add Homebrew to PATH for current session
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         else
           echo "Homebrew already installed"
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         fi
+
+        # Add Homebrew to node user's shell profile
+        mkdir -p /home/node
+        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/node/.bashrc
 
         # Create base directories (support both legacy and new paths)
         mkdir -p /home/node/.clawdbot/cron /home/node/clawd/canvas /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
