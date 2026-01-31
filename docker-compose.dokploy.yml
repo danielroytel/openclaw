@@ -127,6 +127,10 @@ services:
           echo "Authenticating with Tailscale as $TS_HOSTNAME..."
           if tailscale up --auth-key="$TS_AUTHKEY" --hostname="$TS_HOSTNAME"; then
             echo "Tailscale authentication successful"
+
+            # Grant 'node' user permission to run tailscale serve (for Openclaw's Funnel integration)
+            echo "Setting operator permissions for 'node' user..."
+            tailscale set --operator=node 2>/dev/null || echo "Note: Could not set operator (may need admin on tailnet)"
           else
             echo "WARNING: Tailscale authentication failed"
           fi
