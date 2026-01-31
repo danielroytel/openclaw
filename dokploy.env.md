@@ -32,6 +32,16 @@ OLLAMA_API_KEY=ollama-local
 
 > **Note**: For Ollama on a different host, you'll need to configure the custom URL via the app's **Configuration → Models** page. See https://docs.openclaw.ai/providers/ollama
 
+## Optional: Tailscale (for separate setup)
+
+If you're running Tailscale separately (not via this compose), you may need:
+
+```bash
+TAILSCALE_HOSTNAME=moltbot
+```
+
+> **Note**: For Ollama on a different host, you'll need to configure the custom URL via the app's **Configuration → Models** page. See https://docs.openclaw.ai/providers/ollama
+
 ## State Directory (Internal Container Paths)
 
 **IMPORTANT**: Do NOT set `OPENCLAW_CONFIG_DIR` or `OPENCLAW_WORKSPACE_DIR` as environment variables in Dokploy.
