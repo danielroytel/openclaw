@@ -35,7 +35,7 @@ ENV NODE_ENV=production
 RUN chown -R node:node /app
 
 # Create openclaw CLI wrapper for easy command execution
-RUN printf '#!/bin/sh\n# Openclaw CLI wrapper\nif [ "$(id -u)" != "node" ]; then\n  exec su node -c "node /app/dist/index.js $*"\nelse\n  exec node /app/dist/index.js "$@"\nfi\n' > /usr/local/bin/openclaw && \
+RUN printf '#!/bin/sh\n# Openclaw CLI wrapper\nif [ "$(id -un)" != "node" ]; then\n  exec su node -c "node /app/dist/index.js $*"\nelse\n  exec node /app/dist/index.js "$@"\nfi\n' > /usr/local/bin/openclaw && \
   chmod +x /usr/local/bin/openclaw && \
   chown node:node /usr/local/bin/openclaw
 

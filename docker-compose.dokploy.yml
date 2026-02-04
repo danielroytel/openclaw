@@ -78,7 +78,7 @@ services:
 
         # Create openclaw CLI wrapper (fallback if not in image)
         if [ ! -x /usr/local/bin/openclaw ]; then
-          printf '#!/bin/sh\n# Openclaw CLI wrapper\nif [ "$(id -u)" != "node" ]; then\n  exec su node -c "node /app/dist/index.js $*"\nelse\n  exec node /app/dist/index.js "$@"\nfi\n' > /usr/local/bin/openclaw
+          printf '#!/bin/sh\n# Openclaw CLI wrapper\nif [ "$(id -un)" != "node" ]; then\n  exec su node -c "node /app/dist/index.js $*"\nelse\n  exec node /app/dist/index.js "$@"\nfi\n' > /usr/local/bin/openclaw
           chmod +x /usr/local/bin/openclaw
           chown node:node /usr/local/bin/openclaw
         fi
