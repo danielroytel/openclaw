@@ -76,6 +76,23 @@ services:
         # Fix ownership - everything under /home/node belongs to node user
         chown -R node:node /home/node
 
+        # Create openclaw CLI wrapper (fallback if not in image)
+        if [ ! -x /usr/local/bin/openclaw ]; then
+          cat > /usr/local/bin/openclaw << 'EOF'
+        #!/bin/sh
+        # Openclaw CLI wrapper - simplifies running commands as the node user
+        # Usage: openclaw <command> [args...]
+
+        if [ "$(id -u)" != "node" ]; then
+          exec su node -c "node /app/dist/index.js $*"
+        else
+          exec node /app/dist/index.js "$@"
+        fi
+        EOF
+          chmod +x /usr/local/bin/openclaw
+          chown node:node /usr/local/bin/openclaw
+        fi
+
         # Drop to node user and start gateway (matches Dockerfile design)
         exec su node -c "exec node dist/index.js gateway --bind '${OPENCLAW_GATEWAY_BIND:-${CLAWDBOT_GATEWAY_BIND:-lan}}' --port ${OPENCLAW_GATEWAY_PORT:-18789} --allow-unconfigured"
 
