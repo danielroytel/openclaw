@@ -148,7 +148,7 @@ Configure these persistent volume mounts in Dokploy:
 ## Health Check
 
 ```
-node /app/dist/entry.js health --token "$OPENCLAW_GATEWAY_TOKEN"
+node dist/index.js health --token "$OPENCLAW_GATEWAY_TOKEN"
 ```
 
 ## After First Deploy

@@ -1,5 +1,8 @@
 services:
   openclaw-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
     restart: unless-stopped
@@ -51,7 +54,7 @@ services:
       - traefik.http.services.openclaw.loadbalancer.server.port=18789
 
     healthcheck:
-      test: ["CMD", "node", "/app/dist/entry.js", "health", "--token", "${OPENCLAW_GATEWAY_TOKEN:-${CLAWDBOT_GATEWAY_TOKEN}}"]
+      test: ["CMD", "node", "dist/index.js", "health", "--token", "${OPENCLAW_GATEWAY_TOKEN:-${CLAWDBOT_GATEWAY_TOKEN}}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,7 +63,7 @@ services:
     command:
       [
         "node",
-        "/app/dist/entry.js",
+        "dist/index.js",
         "gateway",
         "--bind",
         "${OPENCLAW_GATEWAY_BIND:-${CLAWDBOT_GATEWAY_BIND:-lan}}",
