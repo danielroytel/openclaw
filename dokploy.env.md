@@ -95,6 +95,13 @@ OPENCLAW_GATEWAY_PORT=18789
 OPENCLAW_BRIDGE_PORT=18790
 ```
 
+## Optional: Control UI Origins
+
+```bash
+# Allowed origins for Control UI WebSocket/CORS (for Tailscale Funnel domains)
+OPENCLAW_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS=https://openclaw.tailca039.ts.net,https://openclaw.tailca039.ts.net:18789
+```
+
 ## Optional: Claude AI Provider
 
 ```bash

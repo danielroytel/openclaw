@@ -25,6 +25,8 @@ services:
       OPENCLAW_GATEWAY_PORT: ${OPENCLAW_GATEWAY_PORT:-18789}
       PORT: ${PORT:-8080}
       NODE_ENV: ${NODE_ENV:-production}
+      # Optional: Control UI allowed origins (for Tailscale Funnel domain)
+      OPENCLAW_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS: ${OPENCLAW_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS}
       # Optional: Claude provider
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
