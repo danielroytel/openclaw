@@ -35,10 +35,14 @@ services:
       DOPPLER_API_KEY: ${DOPPLER_API_KEY}
       # Optional: Ollama local LLMs
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama-local}
+      # Optional: Tailscale (for tailnet networking)
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TAILSCALE_HOSTNAME: ${TAILSCALE_HOSTNAME:-openclaw}
 
     volumes:
       - openclaw-config:/home/node/.openclaw
       - openclaw-workspace:/home/node/openclaw
+      - openclaw-tailscale:/var/lib/tailscale
       # Legacy fallback mounts (for existing volumes)
       - moltbot-config:/home/node/.clawdbot
       - moltbot-workspace:/home/node/clawd
@@ -72,6 +76,65 @@ services:
         mkdir -p /home/node/openclaw/agents /home/node/openclaw/canvas
         mkdir -p /home/node/.clawdbot/canvas /home/node/.clawdbot/cron /home/node/.clawdbot/agents /home/node/.clawdbot/sessions
         mkdir -p /home/node/clawd/canvas /home/node/clawd/agents
+        mkdir -p /var/lib/tailscale /var/run/tailscale
+
+        # Install Tailscale if TS_AUTHKEY is provided
+        if [ -n "$TS_AUTHKEY" ]; then
+          echo "TS_AUTHKEY set, setting up Tailscale..."
+
+          # Check if tailscale is installed, if not install it
+          if ! command -v tailscale >/dev/null 2>&1; then
+            echo "Installing Tailscale..."
+            curl -fsSL https://tailscale.com/install.sh | sh && \
+            echo "Tailscale installed successfully"
+          else
+            echo "Tailscale already installed"
+          fi
+
+          # Start tailscaled daemon in background
+          mkdir -p /var/run/tailscale
+          pkill tailscaled 2>/dev/null || true
+          sleep 1
+
+          # Run tailscaled in background (detached)
+          tailscaled --tun=userspace-networking --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock > /tmp/tailscaled.log 2>&1 &
+          TAILSCALED_PID=$!
+          echo "tailscaled PID: $TAILSCALED_PID"
+
+          # Wait for daemon socket to be ready
+          echo "Waiting for tailscaled socket..."
+          for i in $(seq 1 60); do
+            if [ -S /var/run/tailscale/tailscaled.sock ]; then
+              echo "tailscaled socket is ready!"
+              break
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 1
+          done
+
+          # Authenticate with Tailscale
+          echo "Authenticating with Tailscale as $TS_HOSTNAME..."
+          if tailscale up --auth-key="$TS_AUTHKEY" --hostname="$TS_HOSTNAME"; then
+            echo "Tailscale authentication successful"
+
+            # Grant 'node' user permissions for tailscale serve/funnel
+            echo "Setting operator permissions for 'node' user..."
+            tailscale set --operator=node 2>/dev/null || echo "Note: Could not set operator (may need admin on tailnet)"
+          else
+            echo "WARNING: Tailscale authentication failed"
+          fi
+
+          # Verify Tailscale connection
+          echo "Verifying Tailscale status..."
+          if tailscale status >/dev/null 2>&1; then
+            echo "Tailscale is connected!"
+            tailscale status
+          else
+            echo "Warning: Tailscale may not be fully connected"
+          fi
+        else
+          echo "No TS_AUTHKEY set, skipping Tailscale setup"
+        fi
 
         # Install Homebrew if not already installed
         if ! command -v brew >/dev/null 2>&1; then
@@ -105,10 +168,14 @@ volumes:
     driver: local
   openclaw-workspace:
     driver: local
+  openclaw-tailscale:
+    driver: local
   # Legacy volumes for backward compatibility
   moltbot-config:
     driver: local
   moltbot-workspace:
+    driver: local
+  moltbot-tailscale:
     driver: local
 
 networks:
